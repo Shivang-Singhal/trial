@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login & Profile System</title>
+  <title>Firebase Auth & Footprint Logger</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,14 +13,9 @@
   <!-- LOGIN CARD -->
   <main class="container" id="loginCard">
     <h1>Welcome Back</h1>
-    <p>Sign in to access your dashboard</p>
+    <p>Sign in to access your account</p>
 
     <form id="loginForm">
-      <div class="input-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" placeholder="e.g. Alex" required>
-      </div>
-
       <div class="input-group">
         <label for="email">Email Address</label>
         <input type="email" id="email" placeholder="alex@example.com" required>
@@ -31,33 +26,43 @@
         <input type="password" id="password" placeholder="••••••••" required>
       </div>
 
-      <button type="submit" class="btn">Sign In</button>
+      <button type="submit" class="btn" id="loginBtn">Sign In / Register</button>
     </form>
+    <div id="statusMessage" class="status-msg"></div>
   </main>
 
-  <!-- PROFILE CARD (Hidden by default) -->
+  <!-- PROFILE CARD -->
   <main class="container hidden" id="profileCard">
     <div class="avatar-container">
       <div class="avatar" id="avatarLetter">A</div>
     </div>
     
-    <h1 id="profileName">Alex</h1>
-    <p class="role-badge">Pro Member</p>
+    <h1 id="profileName">User</h1>
+    <p class="role-badge">Authenticated User</p>
 
     <div class="info-box">
       <div class="info-row">
-        <span>Email:</span>
-        <strong id="profileEmail">alex@example.com</strong>
+        <span>UID:</span>
+        <strong id="profileUid">---</strong>
       </div>
       <div class="info-row">
-        <span>Status:</span>
-        <strong class="status-active">Active</strong>
+        <span>IP Address:</span>
+        <strong id="profileIp">Detecting...</strong>
+      </div>
+      <div class="info-row">
+        <span>Location:</span>
+        <strong id="profileLocation">Detecting...</strong>
+      </div>
+      <div class="info-row">
+        <span>Browser/OS:</span>
+        <strong id="profileDevice">Detecting...</strong>
       </div>
     </div>
 
     <button class="btn btn-secondary" id="logoutBtn">Log Out</button>
   </main>
 
-  <script src="script.js"></script>
+  <!-- Load script as a Module for Modern Firebase SDK -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
