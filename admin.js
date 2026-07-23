@@ -1,4 +1,4 @@
-// 1. Import Firebase v10 Web SDK Modules
+// 1.b Import Firebase v10 Web SDK Modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
