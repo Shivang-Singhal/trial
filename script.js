@@ -59,20 +59,35 @@ function getSystemFootprints() {
 // Fetch Network/Location Info via Free Geolocation API
 async function getNetworkFootprints() {
   try {
+    // Try primary API
     const res = await fetch('https://ipapi.co/json/');
+    if (!res.ok) throw new Error("Primary API failed");
     const data = await res.json();
     return {
       ip: data.ip || "Unknown",
       city: data.city || "Unknown",
       region: data.region || "Unknown",
       country: data.country_name || "Unknown",
-      org: data.org || "Unknown" // ISP info
+      org: data.org || "Unknown"
     };
   } catch (err) {
-    return { ip: "Blocked/Unavailable", city: "N/A", region: "N/A", country: "N/A", org: "N/A" };
+    try {
+      // Fallback API if primary is blocked or 404s
+      const fallbackRes = await fetch('http://ip-api.com/json/');
+      const fallbackData = await fallbackRes.json();
+      return {
+        ip: fallbackData.query || "Unknown",
+        city: fallbackData.city || "Unknown",
+        region: fallbackData.regionName || "Unknown",
+        country: fallbackData.country || "Unknown",
+        org: fallbackData.isp || "Unknown"
+      };
+    } catch (e) {
+      // Return local defaults without breaking execution
+      return { ip: "Blocked by Adblocker", city: "N/A", region: "N/A", country: "N/A", org: "N/A" };
+    }
   }
 }
-
 // Log "Anonymous Page Visit" when anyone opens the site
 async function logAnonymousVisit() {
   const envData = getSystemFootprints();
