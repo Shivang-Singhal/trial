@@ -1,3 +1,19 @@
+import { doc, onSnapshot } from "firebase/firestore";
+
+// Adding the error callback function as the second parameter
+onSnapshot(
+  doc(db, "your-collection", "your-document"),
+  (docSnapshot) => {
+    // Render your dashboard data here
+    console.log("Current data: ", docSnapshot.data());
+  },
+  (error) => {
+    // Handle the permission error gracefully so the UI doesn't crash completely
+    console.error("Firestore snapshot error: ", error);
+    document.getElementById("dashboard").innerHTML = 
+      `<div class="error">Access denied or failed to load data. Please log in.</div>`;
+  }
+);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getFirestore, 
