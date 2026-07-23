@@ -28,7 +28,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // 4. Admin Configuration
-const ADMIN_EMAIL = "admin@yourdomain.com"; // 👈 Set to your admin login email
+const ADMIN_EMAIL = "admin@yourdomain.com"; // 👈 Set this to match your logged-in email EXACTLY // 👈 Set to your admin login email
 
 // 5. Global State & Unsubscribe Handles
 let unsubscribeVisits = null;
