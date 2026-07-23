@@ -1,4 +1,4 @@
-// 1. Firebase SDK Imports
+// 1. Import Firebase v10 Web SDK Modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
@@ -8,189 +8,202 @@ import {
 import { 
   getFirestore, 
   collection, 
-  onSnapshot, 
-  query, 
-  orderBy 
+  onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 2. Firebase Project Configuration
-// ⚠️ REPLACE THIS with your actual Firebase project credentials from the Firebase Console
+// 2. Firebase Configuration
+// ⚠️ REPLACE THIS with your actual keys from Firebase Console > Project Settings
 const firebaseConfig = {
-    apiKey: "AIzaSyBG8kvloJvV0eFjAJDvd5DDNyoGq9yuwt0",
-    authDomain: "trial-2-afa59.firebaseapp.com",
-    projectId: "trial-2-afa59",
-    storageBucket: "trial-2-afa59.firebasestorage.app",
-    messagingSenderId: "435311403093",
-    appId: "1:435311403093:web:fcb1a249f3bfb6ebba74dc",
-    measurementId: "G-FX4VCD11VF"
-  };
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
 // 3. Initialize Firebase Services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 4. Configuration & State Variables
-const ADMIN_EMAIL = "admin@yourdomain.com"; // 👈 Must match your Firestore rules exact email
+// 4. Admin Configuration
+const ADMIN_EMAIL = "your-admin-email@example.com"; // 👈 Set to your admin login email
 
+// 5. Global State & Unsubscribe Handles
 let unsubscribeVisits = null;
 let unsubscribeUsers = null;
+let locationChartInstance = null;
+let browserChartInstance = null;
 
-// 5. DOM Container Elements
-const visitsCountEl = document.getElementById("visits-count");
-const visitsListEl = document.getElementById("visits-list");
-const usersListEl = document.getElementById("users-list");
-const errorMessageEl = document.getElementById("error-message");
-const logoutBtn = document.getElementById("logout-btn");
+// 6. DOM Elements (Matched to your HTML IDs)
+const totalVisitsEl = document.getElementById("totalVisits");
+const totalUsersEl = document.getElementById("totalUsers");
+const uniqueLocationsEl = document.getElementById("uniqueLocations");
+const usersTableBody = document.getElementById("usersTableBody");
+const logoutBtn = document.getElementById("logoutAdmin");
 
-// 6. Listen for Authentication Changes (Prevents Firestore Race Condition)
+// 7. Auth Listener (Prevents Firestore Permission Errors)
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // Sanitize and check user email against Admin email
-    const currentUserEmail = user.email ? user.email.toLowerCase() : "";
-    const targetAdminEmail = ADMIN_EMAIL.toLowerCase();
+    const userEmail = user.email ? user.email.toLowerCase() : "";
+    const adminEmail = ADMIN_EMAIL.toLowerCase();
 
-    if (currentUserEmail === targetAdminEmail) {
-      console.log("Admin authenticated successfully:", user.email);
-      clearErrorMessage();
-      
-      // Start listening to Firestore Collections
+    if (userEmail === adminEmail) {
+      console.log("Admin verified:", user.email);
       initDashboardListeners();
     } else {
-      console.error(`Unauthorized access attempt by: ${user.email}`);
-      showError(`Access denied. ${user.email} is not authorized as an admin.`);
+      console.error(`Access Denied for ${user.email}`);
+      showTableMessage(`Access Denied: ${user.email} is not authorized as an admin.`);
       detachListeners();
     }
   } else {
-    console.warn("No user logged in. Cleaning up listeners.");
-    showError("Please log in to access the Admin Dashboard.");
+    console.warn("No authenticated session active.");
+    showTableMessage("Please log in with admin credentials to view data.");
     detachListeners();
-    
-    // Optional: Auto-redirect to login page if unauthenticated
-    // window.location.href = "login.html";
   }
 });
 
-// 7. Initialize Real-Time Firestore Snapshot Listeners
+// 8. Initialize Firestore Realtime Listeners
 function initDashboardListeners() {
-  // Prevent duplicate listeners if re-authenticating
   detachListeners();
 
-  // --- Listener 1: Site Visits ---
-  const visitsRef = collection(db, "site_visits");
-  // Optional: Order visits by timestamp if you have a 'timestamp' field
-  // const visitsQuery = query(visitsRef, orderBy("timestamp", "desc"));
-
+  // --- Listener 1: Site Visits (Metrics, Charts & Table) ---
   unsubscribeVisits = onSnapshot(
-    visitsRef,
+    collection(db, "site_visits"),
     (snapshot) => {
-      console.log(`Site Visits updated (${snapshot.docs.length} total)`);
-      renderVisits(snapshot.docs);
+      const visits = snapshot.docs.map(doc => doc.data());
+      
+      // Update Total Visits Metric
+      if (totalVisitsEl) totalVisitsEl.textContent = visits.length;
+
+      // Render Charts & Table
+      renderCharts(visits);
+      renderTable(visits);
     },
     (error) => {
-      console.error("Site Visits Listener Error:", error);
-      showError("Failed to load site visits. Check Firestore rules or permissions.");
+      console.error("Firestore Site Visits Error:", error);
+      showTableMessage("Permission Error: Missing access rights to site_visits.");
     }
   );
 
-  // --- Listener 2: Users Collection ---
-  const usersRef = collection(db, "users");
-
+  // --- Listener 2: Registered Accounts ---
   unsubscribeUsers = onSnapshot(
-    usersRef,
+    collection(db, "users"),
     (snapshot) => {
-      console.log(`Users updated (${snapshot.docs.length} total)`);
-      renderUsers(snapshot.docs);
+      if (totalUsersEl) totalUsersEl.textContent = snapshot.docs.length;
     },
     (error) => {
-      console.error("Users Listener Error:", error);
-      showError("Failed to load user accounts. Check Firestore rules or permissions.");
+      console.error("Firestore Users Error:", error);
     }
   );
 }
 
-// 8. Safely Unsubscribe from Snapshot Listeners
+// 9. Chart.js Data Visualizations
+function renderCharts(visits) {
+  const locationCounts = {};
+  const browserCounts = {};
+
+  visits.forEach((item) => {
+    const loc = item.location || item.country || "Unknown";
+    const platform = item.platform || item.browser || "Unknown";
+
+    locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+    browserCounts[platform] = (browserCounts[platform] || 0) + 1;
+  });
+
+  // Metric: Count Unique Countries
+  if (uniqueLocationsEl) {
+    const uniqueCount = Object.keys(locationCounts).filter(k => k !== "Unknown").length;
+    uniqueLocationsEl.textContent = uniqueCount || Object.keys(locationCounts).length;
+  }
+
+  // --- 1. Location Bar Chart ---
+  const locationCanvas = document.getElementById("locationChart");
+  if (locationCanvas) {
+    if (locationChartInstance) locationChartInstance.destroy(); // Clear old chart state
+
+    locationChartInstance = new Chart(locationCanvas, {
+      type: "bar",
+      data: {
+        labels: Object.keys(locationCounts),
+        datasets: [{
+          label: "Visits",
+          data: Object.values(locationCounts),
+          backgroundColor: "#36A2EB"
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  // --- 2. Browser Doughnut Chart ---
+  const browserCanvas = document.getElementById("browserChart");
+  if (browserCanvas) {
+    if (browserChartInstance) browserChartInstance.destroy(); // Clear old chart state
+
+    browserChartInstance = new Chart(browserCanvas, {
+      type: "doughnut",
+      data: {
+        labels: Object.keys(browserCounts),
+        datasets: [{
+          data: Object.values(browserCounts),
+          backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"]
+        }]
+      },
+      options: { responsive: true }
+    });
+  }
+}
+
+// 10. Table Rendering Function
+function renderTable(visits) {
+  if (!usersTableBody) return;
+
+  if (visits.length === 0) {
+    showTableMessage("No activity logs recorded yet.");
+    return;
+  }
+
+  usersTableBody.innerHTML = visits
+    .slice(0, 10) // Display top 10 most recent visits
+    .map((data) => `
+      <tr>
+        <td>${data.email || "Anonymous"}</td>
+        <td>${data.ip || data.ipAddress || "—"}</td>
+        <td>${data.location || data.country || "Unknown"}</td>
+        <td>${data.platform || data.browser || "Unknown"}</td>
+      </tr>
+    `)
+    .join("");
+}
+
+function showTableMessage(msg) {
+  if (usersTableBody) {
+    usersTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">${msg}</td></tr>`;
+  }
+}
+
+// 11. Cleanup Snapshot Listeners
 function detachListeners() {
-  if (unsubscribeVisits) {
-    unsubscribeVisits();
-    unsubscribeVisits = null;
-  }
-  if (unsubscribeUsers) {
-    unsubscribeUsers();
-    unsubscribeUsers = null;
-  }
+  if (unsubscribeVisits) { unsubscribeVisits(); unsubscribeVisits = null; }
+  if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
 }
 
-// 9. UI Rendering Helper Functions
-function renderVisits(docs) {
-  if (visitsCountEl) visitsCountEl.textContent = docs.length;
-
-  if (visitsListEl) {
-    if (docs.length === 0) {
-      visitsListEl.innerHTML = "<p>No site visits recorded yet.</p>";
-      return;
-    }
-    
-    visitsListEl.innerHTML = docs
-      .map((doc) => {
-        const data = doc.data();
-        return `
-          <div class="visit-card">
-            <span><strong>ID:</strong> ${doc.id}</span>
-            <span><strong>Page:</strong> ${data.page || "N/A"}</span>
-            <span><strong>Date:</strong> ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : "N/A"}</span>
-          </div>
-        `;
-      })
-      .join("");
-  }
-}
-
-function renderUsers(docs) {
-  if (usersListEl) {
-    if (docs.length === 0) {
-      usersListEl.innerHTML = "<p>No registered users found.</p>";
-      return;
-    }
-
-    usersListEl.innerHTML = docs
-      .map((doc) => {
-        const data = doc.data();
-        return `
-          <div class="user-card">
-            <p><strong>Email:</strong> ${data.email || "N/A"}</p>
-            <p><strong>Role:</strong> ${data.role || "User"}</p>
-          </div>
-        `;
-      })
-      .join("");
-  }
-}
-
-function showError(message) {
-  if (errorMessageEl) {
-    errorMessageEl.textContent = message;
-    errorMessageEl.style.display = "block";
-  }
-}
-
-function clearErrorMessage() {
-  if (errorMessageEl) {
-    errorMessageEl.textContent = "";
-    errorMessageEl.style.display = "none";
-  }
-}
-
-// 10. Logout Button Listener
+// 12. Handle "Exit Dashboard" Logout Click
 if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
     try {
       detachListeners();
       await signOut(auth);
       console.log("Logged out successfully.");
+      window.location.reload();
     } catch (err) {
-      console.error("Error logging out:", err);
+      console.error("Error signing out:", err);
     }
   });
 }
