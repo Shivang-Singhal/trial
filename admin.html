@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+  <!-- Chart.js for Interactive Data Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <nav>
+      <a href="#" class="active">📊 Overview</a>
+      <a href="#" id="logoutAdmin">🚪 Exit Dashboard</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <main class="dashboard-content">
+    <header class="topbar">
+      <h1>Realtime Telemetry</h1>
+      <span class="live-indicator">🔴 Live Stream Active</span>
+    </header>
+
+    <!-- METRICS CARDS -->
+    <div class="metrics-grid">
+      <div class="card">
+        <h3>Total Site Visits</h3>
+        <p class="metric-number" id="totalVisits">0</p>
+      </div>
+      <div class="card">
+        <h3>Registered Accounts</h3>
+        <p class="metric-number" id="totalUsers">0</p>
+      </div>
+      <div class="card">
+        <h3>Unique Countries</h3>
+        <p class="metric-number" id="uniqueLocations">0</p>
+      </div>
+    </div>
+
+    <!-- VISUALIZATION SECTION -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Top Visitors by Location</h3>
+        <canvas id="locationChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Browser Breakdown</h3>
+        <canvas id="browserChart"></canvas>
+      </div>
+    </div>
+
+    <!-- REALTIME USER LOGS TABLE -->
+    <div class="table-card">
+      <h3>Recent Active Users</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>IP Address</th>
+            <th>Location</th>
+            <th>Platform</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr><td colspan="4">Listening for authentication events...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
