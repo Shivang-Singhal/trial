@@ -30,7 +30,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // 4. Configuration & State Variables
-const ADMIN_EMAIL = "your-admin-email@example.com"; // 👈 Must match your Firestore rules exact email
+const ADMIN_EMAIL = "admin@yourdomain.com"; // 👈 Must match your Firestore rules exact email
 
 let unsubscribeVisits = null;
 let unsubscribeUsers = null;
