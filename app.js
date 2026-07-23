@@ -18,14 +18,15 @@ import {
 
 // --- STEP 1: Firebase Configuration ---
 // (Replace these with your actual details from Firebase Console)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+ const firebaseConfig = {
+    apiKey: "AIzaSyBG8kvloJvV0eFjAJDvd5DDNyoGq9yuwt0",
+    authDomain: "trial-2-afa59.firebaseapp.com",
+    projectId: "trial-2-afa59",
+    storageBucket: "trial-2-afa59.firebasestorage.app",
+    messagingSenderId: "435311403093",
+    appId: "1:435311403093:web:fcb1a249f3bfb6ebba74dc",
+    measurementId: "G-FX4VCD11VF"
+  };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
