@@ -160,33 +160,47 @@ function renderCharts(visits) {
 }
 
 // 10. Table Rendering Function
+// Update this function inside admin.js
 function renderTable(visits) {
   if (!usersTableBody) return;
 
   if (visits.length === 0) {
-    showTableMessage("No activity logs recorded yet.");
+    showTableMessage("No telemetry logs recorded yet.");
     return;
   }
 
   usersTableBody.innerHTML = visits
-    .slice(0, 10) // Display top 10 most recent visits
-    .map((data) => `
-      <tr>
-        <td>${data.email || "Anonymous"}</td>
-        <td>${data.ip || data.ipAddress || "—"}</td>
-        <td>${data.location || data.country || "Unknown"}</td>
-        <td>${data.platform || data.browser || "Unknown"}</td>
-      </tr>
-    `)
+    .slice(0, 15) // Show top 15 most recent visits
+    .map((data) => {
+      // Format Firestore Timestamp into a readable clock string
+      let timeFormatted = "Just now";
+      if (data.timestamp) {
+        timeFormatted = new Date(data.timestamp.toDate()).toLocaleTimeString([], { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }
+
+      return `
+        <tr>
+          <td><strong>${data.email || "Anonymous Visitor"}</strong></td>
+          <td><code>${data.ip || "—"}</code></td>
+          <td>${data.location || "Unknown"}</td>
+          <td>${data.platform || "Unknown"}</td>
+          <td><code>${data.page || "/"}</code></td>
+          <td>${timeFormatted}</td>
+        </tr>
+      `;
+    })
     .join("");
 }
 
 function showTableMessage(msg) {
   if (usersTableBody) {
-    usersTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">${msg}</td></tr>`;
+    usersTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">${msg}</td></tr>`;
   }
 }
-
 // 11. Cleanup Snapshot Listeners
 function detachListeners() {
   if (unsubscribeVisits) { unsubscribeVisits(); unsubscribeVisits = null; }
