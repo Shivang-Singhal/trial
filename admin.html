@@ -55,22 +55,25 @@
     </div>
 
     <!-- REALTIME USER LOGS TABLE -->
-    <div class="table-card">
-      <h3>Recent Active Users</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>IP Address</th>
-            <th>Location</th>
-            <th>Platform</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody">
-          <tr><td colspan="4">Listening for authentication events...</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <!-- REALTIME USER LOGS TABLE -->
+<div class="table-card">
+  <h3>Recent Active Users & Telemetry</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>IP Address</th>
+        <th>Location</th>
+        <th>Platform / Browser</th>
+        <th>Page</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="usersTableBody">
+      <tr><td colspan="6">Listening for live telemetry...</td></tr>
+    </tbody>
+  </table>
+</div>
   </main>
 
   <script type="module" src="admin.js"></script>
